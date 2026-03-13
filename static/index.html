@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Pipeline Automation PoC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/water.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <h1>Creative Pipeline Automation PoC</h1>
+
+    <section id="campaign-form">
+        <h3>Create New Campaign</h3>
+        <input type="text" id="name" placeholder="Campaign Name">
+
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="region" placeholder="Region (e.g., Japan)" style="flex: 1;">
+            <input type="text" id="audience" placeholder="Target Audience (e.g., Hikers)" style="flex: 1;">
+        </div>
+
+        <textarea id="message" placeholder="Campaign Message"></textarea>
+
+        <div id="products-section">
+            <h4>Products (Minimum 2 required)</h4>
+            <div id="validation-error" class="error-msg"></div>
+            <div id="products-container">
+                <div class="product-entry">
+                    <input type="text" class="prod-name" placeholder="Product Name">
+                    <input type="text" class="prod-desc" placeholder="Product Description">
+                    <label>Base Image (optional):</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
+                        <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
+                    </div>
+                </div>
+                <div class="product-entry">
+                    <input type="text" class="prod-name" placeholder="Product Name">
+                    <input type="text" class="prod-desc" placeholder="Product Description">
+                    <label>Base Image (optional):</label>
+                    <div class="file-input-wrapper">
+                        <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
+                        <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="addProductRow()">+ Add Another Product</button>
+        </div>
+        <button id="generate-btn" class="primary-blue-btn" onclick="submitCampaign()">Generate Assets</button>
+    </section>
+
+    <hr>
+
+    <section id="results">
+        <div class="results-header">
+            <h3>Generated Campaigns</h3>
+            <button onclick="loadCampaigns()">Refresh List</button>
+        </div>
+        <div id="campaign-list"></div>
+    </section>
+
+    <div id="image-modal" class="modal" onclick="this.style.display='none'">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="full-image">
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", loadCampaigns);
+
+        function updateFileLabel(input) {
+            const clearBtn = input.parentElement.querySelector('.clear-file-btn');
+            clearBtn.style.display = input.files.length > 0 ? 'inline-block' : 'none';
+        }
+
+        function clearFileInput(btn) {
+            const wrapper = btn.closest('.file-input-wrapper');
+            wrapper.querySelector('.prod-file').value = "";
+            btn.style.display = 'none';
+        }
+
+        function addProductRow() {
+            const container = document.getElementById('products-container');
+            const div = document.createElement('div');
+            div.className = 'product-entry';
+            div.innerHTML = `
+                <input type="text" class="prod-name" placeholder="Product Name">
+                <input type="text" class="prod-desc" placeholder="Product Description">
+                <label>Base Image (optional):</label>
+                <div class="file-input-wrapper">
+                    <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
+                    <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
+                </div>
+                <button class="remove-prod-btn" onclick="this.parentElement.remove()">Remove Product</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function fixImagePath(path) {
+            if (!path) return '';
+            let clean = path.replace(/\\/g, '/');
+            clean = clean.replace(/storageinputs/g, 'storage/inputs/');
+            clean = clean.replace(/storageoutputs/g, 'storage/outputs/');
+            if (!clean.startsWith('/')) clean = '/' + clean;
+            return clean;
+        }
+
+        async function submitCampaign() {
+            const errorDiv = document.getElementById('validation-error');
+            const genBtn = document.getElementById('generate-btn');
+            errorDiv.style.display = 'none';
+
+            const productEntries = document.querySelectorAll('.product-entry');
+            if (productEntries.length < 2) {
+                errorDiv.textContent = "Error: At least 2 products required.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const products = [];
+            const formData = new FormData();
+            let isValid = true;
+
+            productEntries.forEach((entry, idx) => {
+                const name = entry.querySelector('.prod-name').value.trim();
+                const desc = entry.querySelector('.prod-desc').value.trim();
+                const fileInput = entry.querySelector('.prod-file');
+                if (!name || !desc) { isValid = false; return; }
+                if (fileInput.files.length > 0) formData.append('files', fileInput.files[0]);
+                products.push({ id: String(idx + 1), name: name, description: desc, asset_filename: fileInput.files.length > 0 ? fileInput.files[0].name : null });
+            });
+
+            if (!isValid) {
+                errorDiv.textContent = "Error: All products need a name and description.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const payload = {
+                campaign_name: document.getElementById('name').value,
+                target_region: document.getElementById('region').value,
+                target_audience: document.getElementById('audience').value,
+                campaign_message: document.getElementById('message').value,
+                products: products
+            };
+
+            try {
+                genBtn.textContent = "Generating...";
+                genBtn.disabled = true;
+                formData.append('campaign_data', JSON.stringify(payload));
+                await fetch('/campaigns/', { method: 'POST', body: formData });
+
+                // Reset UI
+                document.getElementById('name').value = "";
+                document.getElementById('region').value = "";
+                document.getElementById('audience').value = "";
+                document.getElementById('message').value = "";
+                document.getElementById('products-container').innerHTML = '';
+                addProductRow(); addProductRow();
+
+                setTimeout(loadCampaigns, 1500);
+            } catch (err) {
+                errorDiv.textContent = "Error: " + err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                genBtn.textContent = "Generate Assets";
+                genBtn.disabled = false;
+            }
+        }
+
+        function openFullSize(src) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('full-image');
+            modal.style.display = "flex";
+            modalImg.src = src;
+        }
+
+        async function loadCampaigns() {
+            const btn = document.querySelector('.results-header button');
+            const originalText = btn.textContent;
+            btn.textContent = "Loading...";
+
+            try {
+                const res = await fetch('/campaigns/');
+                const campaigns = await res.json();
+                const container = document.getElementById('campaign-list');
+                if (campaigns.length === 0) { container.innerHTML = "<p>No campaigns found.</p>"; return; }
+
+                container.innerHTML = campaigns.map(c => {
+                    const productsHtml = c.brief.products.map(p => {
+                        const rawBase = c.base_images[p.name];
+                        const baseImgSrc = rawBase ? fixImagePath(rawBase) : null;
+                        const variationsHtml = (c.generated_assets[p.name] || []).map(asset => {
+                            const path = fixImagePath(asset);
+                            return `<img src="${path}" class="img-preview clickable" onclick="openFullSize('${path}')">`;
+                        }).join('');
+
+                        return `<div class="product-display-item">
+                            <div class="product-header"><strong>${p.name}</strong><a href="/campaigns/${c.id}/download/${p.name}" class="download-btn">Download .ZIP</a></div>
+                            <p>${p.description}</p>
+                            <div class="image-row">
+                                ${baseImgSrc ? `<div><em>Input:</em><br><img src="${baseImgSrc}" class="img-preview clickable" onclick="openFullSize('${baseImgSrc}')"></div>` : ''}
+                                ${variationsHtml ? `<div><em>Outputs:</em><br>${variationsHtml}</div>` : ''}
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                    return `<div class="campaign-card">
+                        <button class="delete-campaign-btn" onclick="deleteCampaign('${c.id}')">Delete</button>
+                        <h4>Campaign: ${c.brief.campaign_name} <span class="status-badge">${c.status}</span></h4>
+                        <p style="margin:0; font-size: 0.9em; color: var(--text-main);">
+                            <strong>Region:</strong> ${c.brief.target_region} | <strong>Audience:</strong> ${c.brief.target_audience}
+                        </p>
+                        <p style="margin: 5px 0 15px 0; font-style: italic; color: var(--links);">
+                            "${c.brief.campaign_message}"
+                        </p>
+                        ${productsHtml}
+                    </div>`;
+                }).reverse().join('');
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.textContent = originalText;
+            }
+        }
+
+        async function deleteCampaign(id) {
+            if (confirm("Delete this campaign?")) {
+                await fetch(`/campaigns/${id}`, { method: 'DELETE' });
+                loadCampaigns();
+            }
+        }
+    </script>
+</body>
+
+</html>
