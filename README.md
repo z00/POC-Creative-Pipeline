@@ -1,10 +1,8 @@
-```markdown
 # Creative Automation Pipeline (PoC)
 
 ## 🚀 Overview
 This Proof of Concept (PoC) automates the localization and resizing of creative assets for social media campaigns. It transforms product descriptions and base images into multi-format, marketing-ready assets (1:1, 9:16, 16:9) with localized text overlays using **FastAPI**, **Pillow**, and **Hugging Face Generative AI**.
 
----
 
 ## 🏗️ Key Design Decisions
 
@@ -14,8 +12,8 @@ This Proof of Concept (PoC) automates the localization and resizing of creative 
 * **Resiliency & Fallbacks:** Implements retries for AI API calls. If the GenAI quota is reached, the system generates "dark-square" placeholders so the resizing and overlay logic can still be verified.
 * **Modular Storage:** Designed with an abstraction layer that allows the current local filesystem storage to be easily swapped for AWS S3 or Google Cloud Storage in production.
 * **Validation:** Strict schema validation exists on both the UI (JavaScript) and Backend (Pydantic), including a minimum requirement of two products per campaign.
-
----
+  
+```markdown
 
 ## 📂 Project Structure
 
