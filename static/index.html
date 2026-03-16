@@ -14,39 +14,58 @@
 
     <section id="campaign-form">
         <h3>Create New Campaign</h3>
-        <input type="text" id="name" placeholder="Campaign Name">
-
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="region" placeholder="Region (e.g., Japan)" style="flex: 1;">
-            <input type="text" id="audience" placeholder="Target Audience (e.g., Hikers)" style="flex: 1;">
+        <div class="form-group">
+            <label>Campaign Name</label>
+            <input type="text" id="name" placeholder="Enter campaign name..." required
+                oninput="this.style.borderColor=''">
         </div>
 
-        <textarea id="message" placeholder="Campaign Message"></textarea>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Region</label>
+                <input type="text" id="region" placeholder="e.g., Japan" required oninput="this.style.borderColor=''">
+            </div>
+            <div class="form-group">
+                <label>Target Audience</label>
+                <input type="text" id="audience" placeholder="e.g., Hikers" required
+                    oninput="this.style.borderColor=''">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Campaign Message</label>
+            <textarea id="message" placeholder="Describe the campaign vibe..." required
+                oninput="this.style.borderColor=''"></textarea>
+        </div>
 
         <div id="products-section">
             <h4>Products (Minimum 2 required)</h4>
             <div id="validation-error" class="error-msg"></div>
             <div id="products-container">
                 <div class="product-entry">
-                    <input type="text" class="prod-name" placeholder="Product Name">
-                    <input type="text" class="prod-desc" placeholder="Product Description">
-                    <label>Base Image (optional):</label>
+                    <input type="text" class="prod-name" placeholder="Product Name" required
+                        oninput="this.style.borderColor=''">
+                    <input type="text" class="prod-desc" placeholder="Product Description" required
+                        oninput="this.style.borderColor=''">
+                    <label><small>Base Image (optional):</small></label>
                     <div class="file-input-wrapper">
                         <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
                         <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
                     </div>
                 </div>
                 <div class="product-entry">
-                    <input type="text" class="prod-name" placeholder="Product Name">
-                    <input type="text" class="prod-desc" placeholder="Product Description">
-                    <label>Base Image (optional):</label>
+                    <input type="text" class="prod-name" placeholder="Product Name" required
+                        oninput="this.style.borderColor=''">
+                    <input type="text" class="prod-desc" placeholder="Product Description" required
+                        oninput="this.style.borderColor=''">
+                    <label><small>Base Image (optional):</small></label>
                     <div class="file-input-wrapper">
                         <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
                         <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
                     </div>
                 </div>
             </div>
-            <button onclick="addProductRow()">+ Add Another Product</button>
+            <button type="button" onclick="addProductRow()">+ Add Another Product</button>
         </div>
         <button id="generate-btn" class="primary-blue-btn" onclick="submitCampaign()">Generate Assets</button>
     </section>
@@ -54,7 +73,7 @@
     <hr>
 
     <section id="results">
-        <div class="results-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3>Generated Campaigns</h3>
             <button onclick="loadCampaigns()">Refresh List</button>
         </div>
@@ -62,7 +81,6 @@
     </section>
 
     <div id="image-modal" class="modal" onclick="this.style.display='none'">
-        <span class="close-modal">&times;</span>
         <img class="modal-content" id="full-image">
     </div>
 
@@ -70,70 +88,85 @@
         document.addEventListener("DOMContentLoaded", loadCampaigns);
 
         function updateFileLabel(input) {
-            const clearBtn = input.parentElement.querySelector('.clear-file-btn');
-            clearBtn.style.display = input.files.length > 0 ? 'inline-block' : 'none';
+            const btn = input.parentElement.querySelector('.clear-file-btn');
+            btn.style.display = input.files.length > 0 ? 'inline-block' : 'none';
         }
 
         function clearFileInput(btn) {
-            const wrapper = btn.closest('.file-input-wrapper');
-            wrapper.querySelector('.prod-file').value = "";
+            btn.closest('.file-input-wrapper').querySelector('.prod-file').value = "";
             btn.style.display = 'none';
         }
 
         function addProductRow() {
-            const container = document.getElementById('products-container');
             const div = document.createElement('div');
             div.className = 'product-entry';
             div.innerHTML = `
-                <input type="text" class="prod-name" placeholder="Product Name">
-                <input type="text" class="prod-desc" placeholder="Product Description">
-                <label>Base Image (optional):</label>
+                <input type="text" class="prod-name" placeholder="Product Name" required oninput="this.style.borderColor=''">
+                <input type="text" class="prod-desc" placeholder="Product Description" required oninput="this.style.borderColor=''">
+                <label><small>Base Image (optional):</small></label>
                 <div class="file-input-wrapper">
                     <input type="file" class="prod-file" accept="image/*" onchange="updateFileLabel(this)">
                     <button class="clear-file-btn" onclick="clearFileInput(this)" type="button">Clear</button>
                 </div>
-                <button class="remove-prod-btn" onclick="this.parentElement.remove()">Remove Product</button>
+                <button type="button" class="remove-prod-btn" onclick="this.parentElement.remove()">Remove Product</button>
             `;
-            container.appendChild(div);
+            document.getElementById('products-container').appendChild(div);
         }
 
-        function fixImagePath(path) {
-            if (!path) return '';
-            let clean = path.replace(/\\/g, '/');
-            clean = clean.replace(/storageinputs/g, 'storage/inputs/');
-            clean = clean.replace(/storageoutputs/g, 'storage/outputs/');
-            if (!clean.startsWith('/')) clean = '/' + clean;
-            return clean;
+        // Logic to clear ALL form inputs
+        function resetForm() {
+            document.getElementById('name').value = "";
+            document.getElementById('region').value = "";
+            document.getElementById('audience').value = "";
+            document.getElementById('message').value = "";
+
+            // Clear products and reset to the default 2 rows
+            document.getElementById('products-container').innerHTML = '';
+            addProductRow();
+            addProductRow();
+
+            // Hide any validation messages
+            document.getElementById('validation-error').style.display = 'none';
+        }
+
+        function fixImagePath(p) {
+            if (!p) return '';
+            let c = p.replace(/\\/g, '/').replace(/storageinputs/g, 'storage/inputs/').replace(/storageoutputs/g, 'storage/outputs/');
+            return c.startsWith('/') ? c : '/' + c;
         }
 
         async function submitCampaign() {
-            const errorDiv = document.getElementById('validation-error');
-            const genBtn = document.getElementById('generate-btn');
-            errorDiv.style.display = 'none';
+            const err = document.getElementById('validation-error');
+            const btn = document.getElementById('generate-btn');
+            err.style.display = 'none';
 
-            const productEntries = document.querySelectorAll('.product-entry');
-            if (productEntries.length < 2) {
-                errorDiv.textContent = "Error: At least 2 products required.";
-                errorDiv.style.display = 'block';
-                return;
-            }
-
+            const rows = document.querySelectorAll('.product-entry');
             const products = [];
             const formData = new FormData();
-            let isValid = true;
+            let valid = true;
 
-            productEntries.forEach((entry, idx) => {
-                const name = entry.querySelector('.prod-name').value.trim();
-                const desc = entry.querySelector('.prod-desc').value.trim();
-                const fileInput = entry.querySelector('.prod-file');
-                if (!name || !desc) { isValid = false; return; }
-                if (fileInput.files.length > 0) formData.append('files', fileInput.files[0]);
-                products.push({ id: String(idx + 1), name: name, description: desc, asset_filename: fileInput.files.length > 0 ? fileInput.files[0].name : null });
+            rows.forEach((row, i) => {
+                const n = row.querySelector('.prod-name');
+                const d = row.querySelector('.prod-desc');
+                const f = row.querySelector('.prod-file');
+                if (!n.value.trim() || !d.value.trim()) {
+                    valid = false;
+                    n.style.borderColor = 'var(--error-red)';
+                    d.style.borderColor = 'var(--error-red)';
+                } else {
+                    if (f.files.length > 0) formData.append('files', f.files[0]);
+                    products.push({
+                        id: String(i + 1),
+                        name: n.value.trim(),
+                        description: d.value.trim(),
+                        asset_filename: f.files.length > 0 ? f.files[0].name : null
+                    });
+                }
             });
 
-            if (!isValid) {
-                errorDiv.textContent = "Error: All products need a name and description.";
-                errorDiv.style.display = 'block';
+            if (!valid || rows.length < 2) {
+                err.textContent = rows.length < 2 ? "Error: 2 products required." : "Error: Fill all fields.";
+                err.style.display = 'block';
                 return;
             }
 
@@ -146,90 +179,91 @@
             };
 
             try {
-                genBtn.textContent = "Generating...";
-                genBtn.disabled = true;
+                // UI FEEDBACK: Disable and Rename
+                btn.textContent = "Generating...";
+                btn.disabled = true;
+
                 formData.append('campaign_data', JSON.stringify(payload));
                 await fetch('/campaigns/', { method: 'POST', body: formData });
 
-                // Reset UI
-                document.getElementById('name').value = "";
-                document.getElementById('region').value = "";
-                document.getElementById('audience').value = "";
-                document.getElementById('message').value = "";
-                document.getElementById('products-container').innerHTML = '';
-                addProductRow(); addProductRow();
-
-                setTimeout(loadCampaigns, 1500);
-            } catch (err) {
-                errorDiv.textContent = "Error: " + err.message;
-                errorDiv.style.display = 'block';
+                resetForm(); // Reset form after successful generation
+                await loadCampaigns();
+            } catch (e) {
+                err.textContent = "Error: " + e.message;
+                err.style.display = 'block';
             } finally {
-                genBtn.textContent = "Generate Assets";
-                genBtn.disabled = false;
+                // RESET UI: Re-enable
+                btn.disabled = false;
+                btn.textContent = "Generate Assets";
             }
         }
 
-        function openFullSize(src) {
-            const modal = document.getElementById('image-modal');
-            const modalImg = document.getElementById('full-image');
-            modal.style.display = "flex";
-            modalImg.src = src;
-        }
-
         async function loadCampaigns() {
-            const btn = document.querySelector('.results-header button');
-            const originalText = btn.textContent;
-            btn.textContent = "Loading...";
+            const list = document.getElementById('campaign-list');
+            // Select the refresh button specifically
+            const refreshBtn = document.querySelector('#results button[onclick="loadCampaigns()"]');
 
             try {
+                // UI FEEDBACK
+                if (refreshBtn) {
+                    refreshBtn.disabled = true;
+                    refreshBtn.textContent = "Refreshing...";
+                }
+
                 const res = await fetch('/campaigns/');
-                const campaigns = await res.json();
-                const container = document.getElementById('campaign-list');
-                if (campaigns.length === 0) { container.innerHTML = "<p>No campaigns found.</p>"; return; }
+                const data = await res.json();
 
-                container.innerHTML = campaigns.map(c => {
-                    const productsHtml = c.brief.products.map(p => {
-                        const rawBase = c.base_images[p.name];
-                        const baseImgSrc = rawBase ? fixImagePath(rawBase) : null;
-                        const variationsHtml = (c.generated_assets[p.name] || []).map(asset => {
-                            const path = fixImagePath(asset);
-                            return `<img src="${path}" class="img-preview clickable" onclick="openFullSize('${path}')">`;
-                        }).join('');
+                if (!data.length) {
+                    list.innerHTML = "<p>No campaigns yet.</p>";
+                    return;
+                }
 
-                        return `<div class="product-display-item">
-                            <div class="product-header"><strong>${p.name}</strong><a href="/campaigns/${c.id}/download/${p.name}" class="download-btn">Download .ZIP</a></div>
-                            <p>${p.description}</p>
-                            <div class="image-row">
-                                ${baseImgSrc ? `<div><em>Input:</em><br><img src="${baseImgSrc}" class="img-preview clickable" onclick="openFullSize('${baseImgSrc}')"></div>` : ''}
-                                ${variationsHtml ? `<div><em>Outputs:</em><br>${variationsHtml}</div>` : ''}
+                list.innerHTML = data.map(c => {
+                    const prods = c.brief.products.map(p => {
+                        const out = (c.generated_assets[p.name] || []).map(a =>
+                            `<img src="${fixImagePath(a)}" class="img-preview" onclick="openFullSize(this.src)">`
+                        ).join('');
+
+                        return `<div style="margin-top:15px; border-top:1px solid var(--neutral-border); padding-top:10px;">
+                            <div class="product-header">
+                                <strong>${p.name}</strong> 
+                                <a href="/campaigns/${c.id}/download/${p.name}" class="download-all-link">Download All</a>
                             </div>
+                            <div class="image-row">${out}</div>
                         </div>`;
                     }).join('');
 
                     return `<div class="campaign-card">
                         <button class="delete-campaign-btn" onclick="deleteCampaign('${c.id}')">Delete</button>
-                        <h4>Campaign: ${c.brief.campaign_name} <span class="status-badge">${c.status}</span></h4>
-                        <p style="margin:0; font-size: 0.9em; color: var(--text-main);">
-                            <strong>Region:</strong> ${c.brief.target_region} | <strong>Audience:</strong> ${c.brief.target_audience}
-                        </p>
-                        <p style="margin: 5px 0 15px 0; font-style: italic; color: var(--links);">
-                            "${c.brief.campaign_message}"
-                        </p>
-                        ${productsHtml}
+                        <h4>${c.brief.campaign_name} <span class="status-badge">${c.status}</span></h4>
+                        <p><small>${c.brief.target_audience} | ${c.brief.target_region}</small></p>
+                        ${prods}
                     </div>`;
                 }).reverse().join('');
-            } catch (err) {
-                console.error(err);
+
+            } catch (e) {
+                list.innerHTML = "Error loading list.";
             } finally {
-                btn.textContent = originalText;
+                // RESET UI
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = "Refresh List";
+                }
             }
         }
 
         async function deleteCampaign(id) {
-            if (confirm("Delete this campaign?")) {
+            if (confirm("Delete this campaign permanently?")) {
                 await fetch(`/campaigns/${id}`, { method: 'DELETE' });
+                resetForm(); // Reset form when a campaign is deleted
                 loadCampaigns();
             }
+        }
+
+        function openFullSize(s) {
+            const m = document.getElementById('image-modal');
+            document.getElementById('full-image').src = s;
+            m.style.display = "flex";
         }
     </script>
 </body>
